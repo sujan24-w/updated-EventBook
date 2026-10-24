@@ -11,7 +11,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Query states matching your backend schema
+  // Query states matching  backend schema
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('soonest');
   const [availability, setAvailability] = useState('');

@@ -135,7 +135,7 @@ else if (!includeCancelled) {
         hasNextPage: page < totalPages,
         hasPreviousPage: page > 1,
       },
-    });
+    }); 
 
     }catch(error){
          console.error("Get events failed:", error);

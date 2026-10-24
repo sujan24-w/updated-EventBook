@@ -12,7 +12,7 @@ export default function Hero() {
       
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-semibold tracking-wide uppercase mb-6">
           <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse"></span>
-          <span>Live Seat Availability Engine</span>
+          <span>Live Seat Availability </span>
         </div>
 
         {/* Hero Title */}

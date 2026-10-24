@@ -1,7 +1,7 @@
 import type{Request, Response} from "express";
 import bcrypt from "bcrypt";
 import {pool} from "../config/database";
-import jwt  from "jsonwebtoken"
+import jwt  from "jsonwebtoken";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 
 const register = async (req:Request , res:Response): Promise<void>=>{
@@ -85,10 +85,11 @@ const  login =  async (req:Request , res:Response): Promise<void>=>{
       process.env.JWT_SECRET!,
       { expiresIn: "1d" }
     );
+    const isProduction = process.env.NODE_ENV === "production";
      res.cookie("token", token, {
       httpOnly: true,
-      secure:  true,   //process.env.NODE_ENV === "production",
-      sameSite: "none", //process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure:  isProduction, 
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -162,10 +163,12 @@ const  login =  async (req:Request , res:Response): Promise<void>=>{
 
 
 const logout =  async (req:Request, res:Response):Promise<void>=>{
+
+  const isProduction = process.env.NODE_ENV === "production";
    res.clearCookie("token", {
     httpOnly: true,
-    secure: true,//process.env.NODE_ENV === "production",
-    sameSite: "none",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     path: "/",
   });
 

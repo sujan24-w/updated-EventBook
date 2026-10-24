@@ -57,7 +57,6 @@ export default function EventFilters({
         >
           <option value="">All Events</option>
           <option value="upcoming">Upcoming</option>
-          <option value="ongoing">Ongoing</option>
           <option value="completed">Completed / Past</option>
           <option value="available">Available Seats</option>
           <option value="soldout">Sold Out</option>

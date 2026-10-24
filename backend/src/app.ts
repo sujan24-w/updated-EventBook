@@ -10,9 +10,11 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser())
+
+const isProduction = process.env.NODE_ENV === "production";
 const allowedOrigins = [
   process.env.CORS_ORIGIN,  
-  /\.vercel\.app$/
+ ...(isProduction ? [/\.vercel\.app$/] : []),
 ].filter((origin): origin is string | RegExp => origin !== undefined);
 
 app.use(

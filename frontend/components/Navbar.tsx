@@ -8,7 +8,6 @@ import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  console.log(user);
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
  const navRef = useRef<HTMLDivElement>(null);
@@ -28,6 +27,15 @@ export default function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [mobileMenuOpen]);
+
+//login  user image like appereance
+    const getAvatar= ()=>{
+      if(user && user.role==="ADMIN") return "AD";
+      if(!user || !user.role) return "";
+       const avatar=user.name[0]+user.name[user.name.length-1];
+      return  avatar.toUpperCase();
+    }
+
   return (
     <header ref={navRef} className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-blue-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,9 +73,10 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-slate-700">
-                 Hi, {user && user.role=== "ADMIN"    ? "Admin": user.name} 
-                </span>
+                <div   title={user && user.role === "ADMIN" ? "Admin" : user.name}
+                className='flex items-center justify-center h-8 w-8 rounded-full bg-blue-600/70 text-white font-semibold text-sm uppercase shadow-sm'>
+                   { getAvatar()   }
+                </div>
                 <button
                   onClick={logout}
                   className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -104,12 +113,15 @@ export default function Navbar() {
                Admin  Dashboard
               </Link>
             ) : user ? (
-              <div className='flex  ' >
-               <div className='flex items-center mr-2'><span className='text-blue-700'>{user?.name ? user.name.split(' ')[0] : 'User'}</span> <User size={18}/></div>
+              <div className='flex  gap-2 ' >
+                 <div  
+                className='flex items-center justify-center h-6 w-6 rounded-full bg-blue-600/70 text-white font-semibold text-sm uppercase shadow-sm'>
+                   { getAvatar()   }
+                </div>
               <Link
                 href="/my-bookings"
                 onClick={closeMenu}
-                className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg transition"
+                className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg transition  max-[450px]:hidden"
                 >
                 Bookings
               </Link>
