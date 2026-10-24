@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import EventFormModal from './EventFormModel';
 import EventBookingModal from './EventBookingModel';
+import Pagination from '../Pagination';
 
 export default function AdminDashboardContent() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [eventDataAdmin, setEventDataAdmin] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [modalError, setModalError] = useState<string | null>(null);
  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -23,7 +25,9 @@ export default function AdminDashboardContent() {
     description: string;
     action: () => Promise<void>;
   } | null>(null);
+
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const limit = 15;
   const fetchAdminData = async (targetPage= page) => {
     setLoading(true);
@@ -36,6 +40,7 @@ export default function AdminDashboardContent() {
      
       const eventsRes = await api.get('/admin/events',{params:{page:targetPage,limit}});
       setEventDataAdmin(eventsRes.data.events || []);
+      setTotalPages(eventsRes.data.totalPages || 1);
     } catch (err: any) {
       console.error('Admin fetch error:', err);
       setError(err.response?.data?.message || 'Failed to load admin dashboard.');
@@ -45,8 +50,8 @@ export default function AdminDashboardContent() {
   };
 
     useEffect(() => {
-    fetchAdminData();
-  }, []);
+    fetchAdminData(page);
+  }, [page]);
 
   const showFeedback = (type: 'success' | 'error', text: string) => {
     setActionMessage({ type, text });
@@ -88,10 +93,11 @@ export default function AdminDashboardContent() {
         try{
         const res = await api.delete(`/admin/harddelete/${id}`);
         showFeedback('success', res.data.message || 'Event Permanently deleted !!!');
-        fetchAdminData();
+        setConfirmModal(null);
+        fetchAdminData(page);
         }catch(error:any){
           const errorMessage = error.response?.data?.message || 'Cannot permanently delete event with existing bookings.';
-          showFeedback('error', errorMessage);
+          setModalError(errorMessage);
         }
       },
     });
@@ -112,7 +118,7 @@ export default function AdminDashboardContent() {
 
 
 
-  if (loading) {
+  if (loading && eventDataAdmin.length === 0 ) {
     return (
       <div className="text-center py-32">
         <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
@@ -279,38 +285,17 @@ export default function AdminDashboardContent() {
               ))}
             </tbody>
           </table>
-          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <button
-            onClick={() => {
-              if (page > 1) {
-                const newPage = page - 1;
-                setPage(newPage);
-                fetchAdminData(newPage);
-              }
-            }}
-            disabled={page === 1}
-            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl shadow-xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-          >
-            Previous
-          </button>
-          
-          <span className="text-xs font-bold text-slate-600">
-            Page {page}
-          </span>
-
-          <button
-            onClick={() => {
-              const newPage = page + 1;
-              setPage(newPage);
-              fetchAdminData(newPage);
-            }}
-            // Optional: disable Next if fewer items than limit were returned
-            disabled={eventDataAdmin.length < limit}
-            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl shadow-xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-          >
-            Next
-          </button>
         </div>
+          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+             <Pagination
+             page={page}
+            totalPages={totalPages}
+            hasNextPage={page < totalPages}
+            hasPreviousPage={page > 1}
+            onPageChange={(newPage) => {
+              setPage(newPage);
+            }}
+             />
         </div>
       </div>
       {/* Custom Confirmation Modal */}
@@ -319,28 +304,44 @@ export default function AdminDashboardContent() {
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-blue-100 text-center relative">
             <h3 className="text-lg font-bold text-slate-900 mb-2">{confirmModal.title}</h3>
             <p className="text-xs text-slate-500 mb-6">{confirmModal.description}</p>
+           {modalError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium text-left">
+                {modalError}
+              </div>
+            )}
+
+            {modalError ? 
+             (
+             <button
+                onClick={() => { setConfirmModal(null); setModalError(null); }}
+                className="w-full py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition shadow-sm"
+              >
+                OK
+              </button>
+             )
+            : ( 
             <div className="flex items-center space-x-3">
+            
               <button
-                onClick={() => setConfirmModal(null)}
+                onClick={() => {setConfirmModal(null); setModalError(null);}}
                 className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
               >
                 Cancel
               </button>
               <button
                 onClick={async () => {
-                  try {
+                
                     await confirmModal.action();
-                  } catch (err: any) {
-                    showFeedback('error', err.response?.data?.message || 'Action failed');
-                  } finally {
-                    setConfirmModal(null);
-                  }
+                   
+                  
+                    
                 }}
                 className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-sm transition"
               >
                 Confirm
               </button>
-            </div>
+            </div> )
+           }
           </div>
         </div>
         

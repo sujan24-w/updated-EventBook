@@ -61,7 +61,7 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center space-x-8 font-medium text-sm text-slate-600">
             <Link href="/"  onClick={closeMenu}className="hover:text-blue-600 transition-colors">Home</Link>
             <Link href="/events"  onClick={closeMenu}className="hover:text-blue-600 transition-colors">Browse Events</Link>
-            {user && (
+            {user && user.role==="USER" && (
               <Link href="/my-bookings" onClick={closeMenu}className="hover:text-blue-600 transition-colors">My Bookings</Link>
             )}
             {user?.role === 'ADMIN' && (

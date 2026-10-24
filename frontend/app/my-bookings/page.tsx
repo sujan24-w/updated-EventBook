@@ -140,11 +140,11 @@ export default function MyBookingsPage() {
                     <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${
                       b.booking_status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {b.booking_status}
+                    {b.booking_status === 'ACTIVE' ? 'Event Booked by User' : 'Event Cancled by User'}
                     </span>
                     {b.event_cancelled && (
                       <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">
-                        Event Cancelled
+                        Event Cancelled by Organizer 
                       </span>
                     )}
                   </div>
@@ -191,7 +191,7 @@ export default function MyBookingsPage() {
     if (b.event_cancelled) {
       return (
         <span className="px-3 py-2 text-xs font-semibold text-amber-700 bg-amber-50 rounded-xl border border-amber-200">
-          Event Cancelled
+         Cancel Booking
         </span>
       );
     }

@@ -664,7 +664,7 @@ const   hardDelete =  async (
       res.status(409).json({
         success: false,
         message:
-          "Cannot permanently delete an event that has bookings. Soft delete it instead.",
+          "Cannot permanently delete an event that has bookings. Try Soft Delete",
       });
       return;
     }
@@ -699,7 +699,13 @@ const getAllAdminEvents = async (req: Request, res: Response): Promise<void> => 
   try {
 const limit = parseInt(req.query.limit as string) || 15;
 const page = parseInt(req.query.page as string) || 1;
-const offset = (page - 1) * limit;    const result = await pool.query(`
+const offset = (page - 1) * limit; 
+
+const countResult = await pool.query(`SELECT COUNT(*) FROM events`);
+const totalEvents = parseInt(countResult.rows[0].count, 10);
+const totalPages = Math.ceil(totalEvents / limit);
+
+const result = await pool.query(`
       SELECT 
         e.*,
       CASE
@@ -721,6 +727,8 @@ const offset = (page - 1) * limit;    const result = await pool.query(`
     res.status(200).json({
       success: true,
       events: result.rows,
+      totalPages,
+      currentPage: page,
     });
   } catch (error) {
     console.error("Failed to fetch admin events:", error);
