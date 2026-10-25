@@ -3,8 +3,8 @@
 
 
 ## 🌟 1.  Demo:## 🌟 1. Demo & Live Links
-- **Frontend (Vercel):** [https://event-booking-sigma-seven.vercel.app](https://event-booking-sigma-seven.vercel.app)
-- **Backend API (Render):** [https://eventbooking-pq7r.onrender.com](https://eventbooking-pq7r.onrender.com)
+- **Frontend (Vercel):** [https://my-eventbooking.vercel.app/](https://my-eventbooking.vercel.app/)
+- **Backend API (Render):** [https://eventsbook-backend.onrender.com/](https://eventsbook-backend.onrender.com/)
 - **GitHub Repository:** [https://github.com/sujan24-w](https://github.com/sujan24-w)
 
 
