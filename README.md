@@ -27,7 +27,7 @@
 | **Backend** | **Node.js + Express (TypeScript)** | RESTful API with explicit transaction management |
 | **Database** | **Supabase (PostgreSQL)** | Relational storage with ACID row-level locking (`pg.Pool`) |
 | **Authentication**| **JWT in HTTP-only Cookies** | Cross-domain cookie authentication (`SameSite=None`, `Secure`) |
-
+| **File Storage & Media** | **Multer + Cloudinary** | Multipart form-data parsing and cloud image hosting / CDN delivery |
 ---
 
 ##  3💻  Setup & Locally Run Instructions
@@ -263,7 +263,7 @@ In accordance with transparent development standards, AI tools were leveraged to
   * Email confirmation receipts featuring dynamic QR codes for physical venue check-ins.
   * Redis-based rate limiting on authentication and booking endpoints.
   * Waitlist automation system to automatically grant seats when active bookings are cancelled.
- *  Image  of event is    null not implemented    cloudinary or any other  Image Management Platforms integration
+
 ---
 
 
