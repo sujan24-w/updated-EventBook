@@ -64,7 +64,19 @@ const updateEventSchema= eventFieldSchema
     (data) => Object.keys(data).length > 0,
     {
       message: "At least one field is required to update an event",
+    })
+  .refine(
+    (data) => {
+      if (data.starts_at && data.ends_at) {
+        return new Date(data.ends_at) > new Date(data.starts_at);
+      }
+      return true;
+    },
+    {
+      message: "End time must be after start time",
+      path: ["ends_at"],
     }
-  );;
+  );
+    
 
 export {getEventsSchema,createEventSchema,updateEventSchema}

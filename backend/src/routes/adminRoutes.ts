@@ -20,12 +20,14 @@ import { cancelEvent,
   getAllAdminEvents
     } from "../controllers/eventController";
 
+import {uploadImage} from "../config/uploadImage";
+
 import { getEventBookings } from "../controllers/bookingController";
 import { getAdminDashboard } from "../controllers/adminDashboard";
 const router = Router();
 
 router.use(authMiddleware, adminMiddleware);
-router.post("/", validate(createEventSchema), createEvent);
+router.post("/", uploadImage.single("image"),validate(createEventSchema), createEvent);
 router.get("/events", getAllAdminEvents);
 router.get("/events/:eventId/bookings", getEventBookings);
 
@@ -34,7 +36,7 @@ router.patch("/:id/restore", restoreEvent);
 router.delete("/harddelete/:id", hardDelete);
 router.delete("/:id", softDeleteEvent);
 
-router.patch("/:id", validate(updateEventSchema), updateEvent);
+router.patch("/:id",uploadImage.single("image"), validate(updateEventSchema), updateEvent);
  router.get("/dashboard", getAdminDashboard);
 
 export default router;

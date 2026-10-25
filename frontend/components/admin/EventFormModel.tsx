@@ -6,7 +6,7 @@ import api from '@/lib/api';
 interface EventFormModalProps {
   eventToEdit?: any;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (message:string) => void;
 }
 
 export default function EventFormModal({ eventToEdit, onClose, onSuccess }: EventFormModalProps) {
@@ -14,37 +14,69 @@ export default function EventFormModal({ eventToEdit, onClose, onSuccess }: Even
   const [description, setDescription] = useState(eventToEdit?.description || '');
   const [venue, setVenue] = useState(eventToEdit?.venue || '');
   const [totalSeats, setTotalSeats] = useState(eventToEdit?.total_seats || 50);
-  const [imageUrl, setImageUrl] = useState(eventToEdit?.image_url || '');
+  const [imagePreview, setImagePreview] = useState(eventToEdit?.image_url || '');
+  const [imageFile, setImageFile] = useState<File | null >(null);
   const [startsAt, setStartsAt] = useState(eventToEdit?.starts_at ? eventToEdit.starts_at.slice(0, 16) : '');
   const [endsAt, setEndsAt] = useState(eventToEdit?.ends_at ? eventToEdit.ends_at.slice(0, 16) : '');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+
+const handleImageChange= (e:React.ChangeEvent<HTMLInputElement>)=>{
+  const  file= e.target.files?.[0];
+  if(file){
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
+};
+
+const handleRemoveImage= ()=>{
+  setImageFile(null);
+  setImagePreview("");
+}
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('venue', venue);
+    formData.append('total_seats', totalSeats.toString());
 
-    const payload = {
-      title,
-      description,
-      venue,
-      total_seats: Number(totalSeats), 
-      image_url: imageUrl || null,      
-      starts_at: new Date(startsAt).toISOString(), 
-      ends_at: new Date(endsAt).toISOString(),     
-    };
-
+    const originalStarts = eventToEdit?.starts_at ? eventToEdit.starts_at.slice(0, 16) : '';
+    const originalEnds = eventToEdit?.ends_at ? eventToEdit.ends_at.slice(0, 16) : '';
+    if (!eventToEdit || startsAt !== originalStarts) {
+      formData.append('starts_at', new Date(startsAt).toISOString());
+    }
+    if (!eventToEdit || endsAt !== originalEnds) {
+      formData.append('ends_at', new Date(endsAt).toISOString());
+    }
+    if(imageFile){
+      formData.append("image",imageFile);
+    }
+ 
     try {
       if (eventToEdit) {
-        // PATCH /api/admin/:id    edit event 
-        await api.patch(`/admin/${eventToEdit.id}`, payload);
+       
+        await api.patch(`/admin/${eventToEdit.id}`, formData,{
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        onSuccess('Event updated successfully!');
       } else {
-        // POST /api/admin/   create event
-        await api.post('/admin', payload);
+       
+        await api.post('/admin', formData,{
+          headers: {
+    "Content-Type": "multipart/form-data",
+  },
+        });
+        onSuccess('Event updated successfully!');
       }
-      onSuccess();
+      
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to save event.');
@@ -144,13 +176,38 @@ export default function EventFormModal({ eventToEdit, onClose, onSuccess }: Even
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Image URL (Optional)</label>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 outline-none text-sm text-slate-900"
-            />
+            <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Event Image</label>
+            
+            {imagePreview ? (
+              <div className="relative w-full h-36 rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md transition"
+                  title="Remove image"
+                >
+                  {/* Minus Icon (-) */}
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  {/* Plus Icon with Image Icon */}
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2 shadow-sm">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <p className="text-xs font-semibold text-slate-600">Click to upload event image</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP (Max 5MB)</p>
+                </div>
+                <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              </label>
+            )}
           </div>
 
           <div className="pt-4 flex items-center space-x-3">

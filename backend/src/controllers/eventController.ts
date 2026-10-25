@@ -1,6 +1,6 @@
 import { Request , Response } from "express";
 import {pool } from "../config/database";
-import {uploadImageToCloudinaty} from "./uploadController";
+import {uploadImageToCloudinary} from "./uploadController";
 
  const getEvents= async (req:Request, res:Response)
 :
@@ -151,7 +151,6 @@ else if (!includeCancelled) {
 const getEventById =async (req:Request, res:Response)
 :
 Promise<void>=>{
-
     try{
   const {id} = req.params;
 
@@ -242,7 +241,7 @@ const createEvent = async (req:Request ,
     } = req.body;
        let imageUrl= null;
     if (req.file) {
-      const uploadResult = await uploadImageToCloudinaty(req.file.buffer);
+      const uploadResult = await uploadImageToCloudinary(req.file.buffer);
       imageUrl = uploadResult.secure_url;
     }
      const result = await pool.query(
@@ -287,18 +286,18 @@ const createEvent = async (req:Request ,
 
 }
 
-
 const updateEvent= async(
  req: Request,
   res: Response
 ): Promise<void> => {
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
     const { id } = req.params;
 
     const toUpdate = {...req.body};
 
-    const existingResult = await pool.query(
+    const existingResult = await client.query(
       `SELECT starts_at, ends_at FROM events 
       WHERE id = $1 AND is_deleted =FALSE`,
       [id]
@@ -315,7 +314,7 @@ const updateEvent= async(
     const existingEvent = existingResult.rows[0];
 
     if (req.file) {
-      const uploadResult = await uploadImageToCloudinaty(req.file.buffer);
+      const uploadResult = await uploadImageToCloudinary(req.file.buffer);
       toUpdate.image_url = uploadResult.secure_url; 
     }
 
@@ -379,7 +378,7 @@ const updateEvent= async(
     }
       // 5. Prevent reducing seats below active bookings
     if (toUpdate.total_seats !== undefined) {
-      const activeBookingsResult = await pool.query(
+      const activeBookingsResult = await client.query(
         `
           SELECT COUNT(*)::int AS active_bookings
           FROM bookings
@@ -391,7 +390,7 @@ const updateEvent= async(
       const activeBookings =
         activeBookingsResult.rows[0].active_bookings;
 
-      if (toUpdate.total_seats < activeBookings) {
+      if (Number(toUpdate.total_seats) < activeBookings) {
          await client.query("ROLLBACK");
         res.status(409).json({
           success: false,
@@ -399,17 +398,6 @@ const updateEvent= async(
         });
         return;
       }
-    }
-
-
-    const fields = Object.keys(toUpdate);
-
-    if (fields.length === 0) {
-      res.status(400).json({
-        success: false,
-        message: "Provide at least one field to update",
-      });
-      return;
     }
 
   //update query  with correct fields
@@ -442,7 +430,7 @@ const updateEvent= async(
       return;
     }
     // all checks and update 
- await client.query("COMMIT");
+   await client.query("COMMIT");
     res.status(200).json({
       success: true,
       message: "Event updated successfully",

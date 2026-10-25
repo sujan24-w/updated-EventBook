@@ -351,7 +351,7 @@ export default function AdminDashboardContent() {
         <EventFormModal
           eventToEdit={editingEvent}
           onClose={() => setIsCreateModalOpen(false)}
-          onSuccess={fetchAdminData}
+          onSuccess={(message)=>{showFeedback('success', message);fetchAdminData(page)}}
         />
       )}
 

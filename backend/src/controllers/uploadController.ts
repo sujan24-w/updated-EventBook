@@ -3,7 +3,7 @@ import cloudinary from "../config/cloudinary";
 import { Readable } from "stream";
 
 
-export const uploadImageToCloudinaty = async (fileBuffer:Buffer): Promise<{secure_url: string, public_id:string}>=>{
+export const uploadImageToCloudinary = async (fileBuffer:Buffer): Promise<{secure_url: string, public_id:string}>=>{
 
     return new Promise((resolve,reject)=>{
       const stream= cloudinary.uploader.upload_stream({
