@@ -3,8 +3,7 @@
 
 
 ## 🌟 1.  Demo:## 🌟 1. Demo & Live Links
-- **Frontend (Vercel):** [https://my-eventbooking.vercel.app/](https://my-eventbooking.vercel.app/)
-- **Backend API (Render):** [https://eventsbook-backend.onrender.com/](https://eventsbook-backend.onrender.com/)
+
 - **GitHub Repository:** [https://github.com/sujan24-w](https://github.com/sujan24-w)
 
 
