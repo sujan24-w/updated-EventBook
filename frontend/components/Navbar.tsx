@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { User } from 'lucide-react';
 import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {

@@ -1,5 +1,6 @@
 import { Request , Response } from "express";
 import {pool } from "../config/database";
+import {uploadImageToCloudinaty} from "./uploadController";
 
  const getEvents= async (req:Request, res:Response)
 :
@@ -238,9 +239,12 @@ const createEvent = async (req:Request ,
       ends_at,
       venue,
       total_seats,
-      image_url,
     } = req.body;
-
+       let imageUrl= null;
+    if (req.file) {
+      const uploadResult = await uploadImageToCloudinaty(req.file.buffer);
+      imageUrl = uploadResult.secure_url;
+    }
      const result = await pool.query(
       `
         INSERT INTO events (
@@ -262,7 +266,7 @@ const createEvent = async (req:Request ,
         ends_at,
         venue,
         total_seats,
-        image_url ?? null,
+        imageUrl, 
       ]
     );
 
@@ -292,7 +296,7 @@ const updateEvent= async(
   try {
     const { id } = req.params;
 
-    const toUpdate = req.body;
+    const toUpdate = {...req.body};
 
     const existingResult = await pool.query(
       `SELECT starts_at, ends_at FROM events 
@@ -309,6 +313,11 @@ const updateEvent= async(
     }
 
     const existingEvent = existingResult.rows[0];
+
+    if (req.file) {
+      const uploadResult = await uploadImageToCloudinaty(req.file.buffer);
+      toUpdate.image_url = uploadResult.secure_url; 
+    }
 
    if (!toUpdate ||typeof toUpdate !== "object"
      || Array.isArray(toUpdate) ||
@@ -403,7 +412,7 @@ const updateEvent= async(
       return;
     }
 
-    // 6. Build the update query with correct placeholders
+  //update query  with correct fields
     const setClauses = validFields.map(
       (field, index) => `${field} = $${index + 1}`
     );
@@ -432,7 +441,7 @@ const updateEvent= async(
       });
       return;
     }
-    //commit after all checks and update 
+    // all checks and update 
  await client.query("COMMIT");
     res.status(200).json({
       success: true,
