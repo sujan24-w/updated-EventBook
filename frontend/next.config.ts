@@ -1,9 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   turbopack: {
     rules: {
       "*.css": {
@@ -11,6 +7,14 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
+      },
+    ];
   },
 };
 
