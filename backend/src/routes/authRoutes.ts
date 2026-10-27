@@ -14,6 +14,6 @@ router.get("/", (req: Request, res: Response) => {
 router.post("/register",rateLimitRegLog, validate(registerSchema), register);
 router.post("/login",rateLimitRegLog, validate(loginSchema), login);
 router.get("/me", authMiddleware,getuser);
-router.post("/logout",authMiddleware,logout);
+router.post("/logout",logout); 
 
 export  default router;

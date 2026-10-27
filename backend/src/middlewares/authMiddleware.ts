@@ -15,8 +15,7 @@ export const authMiddleware = (
   next: NextFunction
 ): void => {
   try {
-    const {token} = req.cookies;
-console.log(token);
+    const token = req.cookies?.token;
 
     if (!token) {
       res.status(401).json({
@@ -45,14 +44,21 @@ console.log(token);
       userId: decoded.userId,
       role: decoded.role,
     };
-console.log("passing throw middleware auth");
+
 
     next();
-  } catch {
+  } catch(error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+      return;
+    }
     res.status(500).json({
      success: false,
       ok: "not ok",
-      message: "Invalid or expired token",
+      message: "internal Server Error ",
     });
   }
 };

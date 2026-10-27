@@ -1,7 +1,23 @@
+# Dependencies
 node_modules/
+
+# Environment variables and secrets
 .env
-.env.local
-.env*.local
+.env.*
+!.env.example
+!.env.test.example
+
+
+# Compiled TypeScript
 dist/
-.next/
+
+# Test coverage
 coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,270 +1,265 @@
- #  🎟️ EventBook – Full-Stack Event Booking System
- > ** full-stack event booking platform built with Next.js, Node.js/Express, and Supabase (PostgreSQL), featuring secure cross-domain cookie authentication and strict concurrency-safe booking rules.
+# 🎟️ EventBook — Full-Stack Event Booking System
 
+A full-stack event booking platform built with **Next.js, TypeScript, Node.js, Express, and PostgreSQL**. Users can discover events, reserve seats, and manage bookings, while Admin manage events and monitor bookings.
 
-## 🌟 1.  Demo:## 🌟 1. Demo & Live Links
-- **Frontend (Vercel):** [https://my-eventbooking.vercel.app/](https://my-eventbooking.vercel.app/)
-- **Backend API (Render):** [https://eventsbook-backend.onrender.com/](https://eventsbook-backend.onrender.com/)
-- **GitHub Repository:** [https://github.com/sujan24-w](https://github.com/sujan24-w)
+The project focuses on secure authentication, role-based access control, REST API design, database integrity, and concurrency-safe seat reservations.
 
+## 🌐 Live Demo
 
-### Test Credentials
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Admin** | `admin@eventbook.com` | `eventbooksujan@2026` |
-| **Attendee 1** | `sagar@eventbook.com` | `UserPassword123!` |
-| **Attendee 2** | `sujal@eventbook.com` | `UserPassword123!` |
+- **Frontend:** [EventBook](https://my-eventbooking.vercel.app/)
+- **Backend API:** [Render API](https://eventsbook-backend.onrender.com/)
+- **GitHub:** [Source Code](https://github.com/sujan24-w/updated-EventBook)
 
----
+> Note: The backend is hosted on Render's free tier, so the first request after inactivity may take longer to respond.
 
+## ✨ Features
 
-## 🛠️ 2. Tech Stack
+### User features
+- Register, log in, and log out.
+- Browse upcoming events.
+- Search events and navigate server-paginated results.
+- View event details and seat availability.
+- Reserve a seat for an event.
+- View personal bookings and cancel eligible reservations.
 
-| Layer | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Frontend** | **Next.js + TypeScript** | Server-rendered pages, client routing, and responsive UI |
-| **Styling** | **Tailwind CSS** | Clean, mobile-friendly design with fallback graphics |
-| **Backend** | **Node.js + Express (TypeScript)** | RESTful API with explicit transaction management |
-| **Database** | **Supabase (PostgreSQL)** | Relational storage with ACID row-level locking (`pg.Pool`) |
-| **Authentication**| **JWT in HTTP-only Cookies** | Cross-domain cookie authentication (`SameSite=None`, `Secure`) |
-| **File Storage & Media** | **Multer + Cloudinary** | Multipart form-data parsing and cloud image hosting / CDN delivery |
----
+### Admin features
+- Protected admin access with role-based authorization.
+- Create and update events.
+- Cancel, restore, and manage event records.
+- View event bookings and attendee information.
+- Access dashboard statistics.
 
-##  3💻  Setup & Locally Run Instructions
-### Step I: Start Backend Server
-```bash
-cd backend
-npm run dev
-# Server running at http://localhost:5000
-```
+### Security and reliability
+- JWT authentication using HTTP-only cookies.
+- Password hashing with bcrypt.
+- Request validation using Zod.
+- Protected routes and role-based middleware.
+- Authentication(Register,Login) rate limiting.
+- Parameterized PostgreSQL queries.
+- Transaction-based booking with row-level locking.
+- Automated backend tests using Jest and Supertest.
 
----
+## 🛠️ Tech Stack
 
-### Step II: Start Frontend Client
-```bash
-# Open a new terminal
-cd frontend
-npm install
-npm run dev
-# Frontend running at http://localhost:5173
-```
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js, TypeScript |
+| Styling | Tailwind CSS |
+| Backend | Node.js, Express, TypeScript |
+| Database | Supabase PostgreSQL |
+| Authentication | JWT, HTTP-only cookies |
+| Validation | Zod |
+| Password hashing | bcrypt |
+| Image storage | Multer, Cloudinary |
+| Testing | Jest, ts-jest, Supertest |
+| Deployment | Vercel, Render |
 
+## 🏗️ Architecture
+
+The application uses a separate frontend and backend.
+
+- **Frontend:** Provides the user interface and communicates with the backend API.
+- **Backend:** Handles authentication, validation, authorization, event management, and booking logic.
+- **Database:** PostgreSQL stores users, events, and bookings.
+- **Authentication:** The backend issues an HTTP-only cookie containing the JWT. Protected endpoints verify the token and permissions before processing requests.
+
+The frontend uses an API rewrite/proxy configuration for communication with the deployed backend.
+
+## 🗄️ Database Design
+
+The application uses three primary tables.
+
+### `users`
+Stores user accounts, password hashes, roles, and timestamps.
+
+### `events`
+Stores event information, including title, description, venue, start and end times, seat capacity, image URL, cancellation status, and deletion status.
+
+### `bookings`
+Connects users to events and tracks booking status (`ACTIVE` or `CANCELLED`).
+
+Important database rules include:
+
+- UUID primary keys.
+- Foreign-key relationships.
+- Positive event seat capacity.
+- Valid event start and end times.
+- A partial unique index to prevent duplicate active bookings.
+- Indexes supporting common booking and event queries.
+
+PostgreSQL's `pgcrypto` extension provides UUID generation through `gen_random_uuid()`.
+
+## 🔐 Preventing Duplicate Bookings and Overselling
+
+A key challenge in booking systems is handling simultaneous booking requests.
+
+Suppose an event has one seat remaining and two users attempt to reserve it at nearly the same time. Without concurrency control, both requests could read the same availability and attempt to reserve the final seat.
+
+EventBook addresses this in the booking transaction:
+
+1. Start a database transaction.
+2. Lock the relevant event row using `SELECT ... FOR UPDATE`.
+3. Check whether the event is eligible for booking.
+4. Check for an existing active booking.
+5. Count active bookings and verify available capacity.
+6. Insert the booking if a seat is available.
+7. Commit the transaction; roll back on failure.
+
+The row lock serializes competing booking operations for the same event. The database constraints provide additional protection against duplicate active reservations.
+
+## 📡 API Overview
+
+The following endpoints represent the current core API design. Check the implementation before relying on this table as an exhaustive API reference.
+
+### Authentication
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/auth/register` | Register an account |
+| POST | `/api/auth/login` | Authenticate and set the cookie |
+| POST | `/api/auth/logout` | Clear the authentication cookie |
+
+### Events
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/events` | Browse and search events |
+| POST | `/api/events` | Create an event (admin) |
+| PUT | `/api/events/:id` | Update an event (admin) |
+
+The backend also supports additional event-management operations, including cancellation, restoration, deletion, and attendee access where implemented.
+
+### Bookings
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/bookings/:eventId` | Reserve a seat |
+| GET | `/api/bookings/me` | Retrieve the current user's bookings |
+| PATCH | `/api/bookings/:bookingId/cancel` | Cancel an eligible booking |
+
+Protected endpoints require valid authentication, and administrative operations require the appropriate role.
+
+## 🚀 Run Locally
 
 ### Prerequisites
-- Nodeejs v22.16.0
-- Supabase PostgreSQL  pool  coonecting String 
 
-### Step 1: Database Migration & Seeding
+- Node.js
+- npm
+- A PostgreSQL database, such as Supabase
+- Git
+
+### 1. Clone the repository
+
 ```bash
-# Navigate to backend
+git clone https://github.com/sujan24-w/updated-EventBook.git
+cd EventBooking
+```
+
+Use the actual directory name created by Git if it differs from `EventBooking`.
+
+### 2. Configure the backend
+
+```bash
 cd backend
-
-# Install dependencies
 npm install
+```
 
+Create a local `.env` file using the variable names expected by the backend. For example:
 
+```env
+PORT=5000
+NODE_ENV=development
+DATABASE_URI=your_postgresql_connection_string
+JWT_SECRET=your_long_random_secret
+```
 
-# Run database schema migration
+Add any other variables required by your current application, such as Cloudinary credentials.
+
+**Do not commit `.env` files or real credentials.**
+
+### 3. Initialize the database
+
+Run the project's existing migration and optional seed scripts:
+
+```bash
 npm run migrate
-
-# (Optional) Seed initial demo accounts and sample events
 npm run seed
 ```
 
+Use the seed script only with a database intended for development or demo data.
 
-# 🗄️ 4. Data Model & Architecture
-### The application uses three core PostgreSQL tables:
+### 4. Start the backend
 
-- users: Stores user accounts, hashed passwords (bcryptjs), and user roles (ADMIN vs USER).
-
- - events: Stores event details (title, venue, starts_at, total_seats, is_cancelled, is_deleted).
-
-- bookings: Connects users to events, enforcing status (ACTIVE vs CANCELLED) to prevent duplicate seat reservations.
-** NOTE: Image  of event is    null not implemented **
-
-```sql
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
--- 1.users  table
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-    name VARCHAR(255) NOT NULL,
-
-    email VARCHAR(255) NOT NULL UNIQUE,
-
-    password_hash VARCHAR(255) NOT NULL,
-
-    role VARCHAR(20) NOT NULL DEFAULT 'USER'
-        CHECK (role IN ('USER', 'ADMIN')),
-
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-
--- 2. events table
-CREATE TABLE IF NOT EXISTS events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-    title VARCHAR(255) NOT NULL,
-
-    description TEXT NOT NULL,
-
-    starts_at TIMESTAMPTZ NOT NULL,
-
-    ends_at TIMESTAMPTZ NOT NULL,
-
-    venue VARCHAR(255) NOT NULL,
-
-    total_seats INTEGER NOT NULL
-        CHECK (total_seats > 0),
-    image_url TEXT,
-    is_cancelled BOOLEAN NOT NULL DEFAULT FALSE,
-
-     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
-
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    CONSTRAINT valid_event_time    CHECK (ends_at > starts_at)
-);
-
-CREATE INDEX IF NOT EXISTS idx_events_starts_at
-ON events (starts_at);
-CREATE INDEX IF NOT EXISTS idx_events_is_cancelled
-ON events (is_cancelled);
-
--- 3. booking table
-CREATE TABLE IF NOT EXISTS bookings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id UUID NOT NULL REFERENCES events(id) ON DELETE RESTRICT,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
-    CHECK (status IN ('ACTIVE', 'CANCELLED')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-
+```bash
+npm run dev
 ```
 
-## 📡 5. API Endpoints
+The backend is configured to use port `5000` locally.
 
-### 🔑 Authentication
-* **`POST /api/auth/register`** – Register a new account.
-* **`POST /api/auth/login`** – Login and set HTTP-only authentication cookie.
-* **`POST /api/auth/logout`** – Clear auth cookie.
+### 5. Configure and start the frontend
 
-### 📅 Events
-* **`GET /api/events`** – List events with search and server-side pagination.
-* **`POST /api/events`** – Create new event (Admin only).
-* **`PUT /api/events/:id`** – Edit event details (Admin only).
-* **`DELETE /api/events/:id`** – Delete event (Admin only).
-* **`GET /api/events/:id/attendees`** – View registered attendees (Admin only).
+Open a second terminal:
 
-### 🎟️ Bookings
-* **`POST /api/events/:id/book`** – Concurrency-safe seat reservation (`USER` only).
-* **`GET /api/bookings/my`** – Retrieve personal active/past bookings.
-* **`DELETE /api/bookings/:id`** – Cancel active booking and free up capacity.
-
-```sql
-
--- One active booking per user per event
-CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_active_booking
-ON bookings (event_id, user_id)
-WHERE status = 'ACTIVE';
-
--- Booking query indexes
-CREATE INDEX IF NOT EXISTS idx_bookings_user_id
-ON bookings (user_id);
-
-CREATE INDEX IF NOT EXISTS idx_bookings_event_active
-ON bookings (event_id)
-WHERE status = 'ACTIVE';
-
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
+Use the local frontend URL printed by Next.js in the terminal. Configure the frontend's API rewrite and any required environment variables according to your project configuration.
 
-## 🔮 . Known Issues
+## 🧪 Testing
 
-* **Render Free Tier Cold Starts:** The backend API on Render's free tier spins down after periods of inactivity, causing an initial ~30-second latency on the first request.
+The backend uses Jest, ts-jest, and Supertest for automated tests.
 
----
+**Latest recorded test results**
 
-## 🔒 . Concurrency-Safe Capacity Enforcement & Anti-Overselling Deep Dive
+| Metric | Result |
+|---|---:|
+| Test suites passed | 11 / 11 |
+| Tests passed | 26 / 26 |
+| Statement coverage | 48.31% |
+| Branch coverage | 26% |
+| Function coverage | 29.26% |
+| Line coverage | 47.32% |
 
-### The Problem: Race Conditions & Ticket Overselling
-When an event has **1 seat remaining** and two attendees (User A and User B) click "Book Now" at the exact same millisecond:
-1. User A reads available seats: `1 > 0` (True)
-2. User B reads available seats: `1 > 0` (True)
-3. User A inserts booking #1 (Capacity reached)
-4. User B inserts booking #2 (**OVERSELL ERROR: 2 seats sold for capacity 1!**)
+Run the test suite from the backend directory:
 
- ```sql
- // 1. Connect client and begin transaction
-client = await pool.connect();
-await client.query("BEGIN");
+```bash
+npm test
+```
 
-// 2. Lock event row strictly using FOR UPDATE
-const eventResult = await client.query(
-  `SELECT id, title, venue, starts_at, total_seats, is_cancelled
-   FROM events WHERE id = $1 AND is_deleted = FALSE FOR UPDATE`,
-  [eventId]
-);
+Generate a coverage report:
 
-// 3. Dynamic active booking check & seat calculation under lock
-const countResult = await client.query(
-  `SELECT COUNT(*)::int AS active_bookings FROM bookings 
-   WHERE event_id = $1 AND status = 'ACTIVE'`,
-  [eventId]
-);
+```bash
+npx jest --coverage
+```
 
-const activeBookings = countResult.rows[0].active_bookings;
-if (event.total_seats - activeBookings <= 0) {
-  // Event is sold out -> Rollback transaction
-  res.status(409).json({ success: false, message: "This event is fully booked" });
-  return;
-}
+The project uses a separate test database configured through `.env.test.local`. Keep this file private and ensure tests never target production data.
 
-// 4. Insert active booking and COMMIT
-await client.query("COMMIT");
- ```
+Coverage indicates which code paths have been exercised; it does not by itself prove that every behavior is correct. The recorded results should be refreshed whenever the test suite changes.
 
 
-## 🤖 7. AI Usage Disclosure
+## 🤖 AI Usage Disclosure
 
-In accordance with transparent development standards, AI tools were leveraged to assist with specific workflow stages:
+AI tools were used as development aids during selected stages of the project:
 
-* **Perplexity:** Used for initial schema design research and database architectural planning.
-* **Gemini:** Used for debugging cross-domain cookie transmission issues (`SameSite=None`, CORS, and `withCredentials` behavior between Vercel and Render).
-* **ChatGPT & Gemini:** Used for Tailwind CSS layout structure and boilerplate test suite configurations.
-* *All core business rules, ACID database transactions (`SELECT ... FOR UPDATE`), row-level concurrency mechanics, and express error handlers were hand-coded, verified, and audited.TRANSFORMING MONGODB LOGICS TO SQL *
+- **Perplexity:** Initial research on database schema design and architecture.
+- **Gemini:** Debugging cross-origin authentication cookies, CORS, `SameSite=None`, `Secure`, and credential transmission and db queries.
+- **ChatGPT and Gemini:** Assistance with Tailwind CSS layouts, boilerplate configuration, and development guidance.
+- **Cursor:** Assistance with writing, organizing, and debugging automated tests using Jest, ts-jest, and Supertest.
+
+AI tools supported the development workflow, while implementation, debugging, and verification were carried out through hands-on development and testing(Postman).
+
+
+## 🔮 Future Improvements
+
+- Email booking confirmations and QR-code tickets.
+- Waitlist management for sold-out events.
+- Improved event image management.
+- Expanded automated tests for event management and authentication edge cases.
+- Additional monitoring and production error reporting.
 
 ---
 
-
-### 🔑 8. Logins & Role-Based Access Control (RBAC)
-* **Admin Login (`admin@eventbook.com` / `eventbooksujan@2026`):** Provides administrative privileges to oversee platform metrics, create/edit/cancel/purge events, and inspect all user bookings via `/api/admin/*`.
-* **User Login (`sagar@eventbook.com` / `UserPassword123!`):** Provides standard user access to browse active events, execute secure seat bookings, and manage personal reservations.
-* *Why:* Separation of concerns ensures core administrative tasks and data mutations are strictly protected from standard user interference.
-
----
-
-
-## Tools Used & Their Purposes
-*  Axios: HTTP client configured with credentials and Next.js rewrite proxy for secure first-party cookie transmission.
-
-*  Jest & Supertest: Automated unit and integration testing frameworks for business logic and endpoint validation.
-
-*  Tailwind CSS: Utility-first CSS framework for responsive UI styling.
-
-* **Future Enhancements:** 
-  * Email confirmation receipts featuring dynamic QR codes for physical venue check-ins.
-  * Redis-based rate limiting on authentication and booking endpoints.
-  * Waitlist automation system to automatically grant seats when active bookings are cancelled.
-
----
-
-
-* Building EventBook has been an incredible full-stack learning experience. Working through cross-domain cookie authentication hurdles, implementing ACID transactions with FOR UPDATE row locks, and tying it together with Next.js gave me a deep appreciation for building good  web applications.
+**EventBook** is a learning and portfolio project demonstrating full-stack development, REST API design, relational database modeling, authentication, automated testing, and concurrency-aware booking logic.

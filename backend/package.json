@@ -6,8 +6,8 @@
     "dev": "nodemon --watch src --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "ts-node src/seed.ts",
-    "test": "jest --preset=ts-jest --runInBand"
+    "seed": "ts-node src/database/seed.ts",
+"test": "jest --preset=ts-jest --runInBand --testMatch=\"**/tests/**/*.ts\""
   },
   "keywords": [],
   "author": "",
